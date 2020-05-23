@@ -1,1 +1,1 @@
-# flashclix-test-api
+# flashclix-api
