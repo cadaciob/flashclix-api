@@ -61,6 +61,9 @@ const userSchema = new Schema({
             required: true
         }
     }],
+    avatar: {
+        type: Buffer
+    }
     // createdDatum: {
     //     type: String,
     //     required: true,
@@ -83,6 +86,7 @@ userSchema.methods.toJSON = function () {
 
     delete userObject.password
     delete userObject.tokens
+    delete userObject.avatar
 
     return userObject
 }
