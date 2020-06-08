@@ -4,6 +4,8 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const Flashcard = require('./flashcard')
 
+const generator = require('generate-password')
+
 const Schema = mongoose.Schema
 
 const userSchema = new Schema({
@@ -101,7 +103,6 @@ userSchema.methods.generateAuthToken = async function () {
     return token
 }
 
-
 userSchema.statics.findByUserEmailPassword = async (email, password) => {
     const user = await User.findOne({ email })
 
@@ -136,6 +137,41 @@ userSchema.pre('remove', async function (next) {
 
     next()
 })
+
+
+const { forgotPasswordEmail } = require('../emails/account')
+
+// 
+userSchema.statics.findByUserEmail = async (email) => {
+    const generatePassword = generator.generate({
+        length: 12,
+        numbers: true
+    })
+
+ //   resetPasswordEmail(email, username, generatePassword)
+
+    const pw = generatePassword
+
+    // const user = await User.findOneAndUpdate({ email }, { password: pw }, {
+    //     new: true,
+    //     upsert: true 
+    //   })
+
+    const user = await User.findOne({ email })
+
+    const username = user.username
+
+    forgotPasswordEmail(email, username, generatePassword)
+
+
+    console.log(user.password, '1')
+
+    user.password = pw
+
+    await user.save()
+
+    return user
+}
 
 const User = mongoose.model('User', userSchema)
 

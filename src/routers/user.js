@@ -1,10 +1,13 @@
 const express = require('express')
 const User = require('../models/user')
-const router = new express.Router()
 const auth = require('../middleware/auth')
 
 const multer = require('multer')
 const sharp = require('sharp')
+
+const { sendWelcomeEmail, sendCancelationEmail } = require('../emails/account')
+
+const router = new express.Router()
 
 router.get("/current", async (req, res) => {
     const user = await User.find({})
@@ -58,6 +61,7 @@ router.post('/users/signup', async (req, res) => {
     const user = new User(req.body)
 
     try {
+        sendWelcomeEmail(user.email, user.username)
         const token = await user.generateAuthToken()
         //console.log(new Date(req.body.birthdate).toString())
         user.birthdate = new Date(req.body.birthdate)
@@ -161,7 +165,7 @@ router.patch('/users/me', auth, async (req, res) => {
 router.delete('/users/me', auth, async (req, res) => {
     try {
         await req.user.remove()
-
+        sendCancelationEmail(req.user.email, req.user.username)
         res.send(req.user)
     } catch (error) {
         res.status(500).send()
@@ -210,6 +214,63 @@ router.get('/users/:id/avatar', async (req, res) => {
         res.send(user.avatar)
     } catch (e) {
         res.status(404).send()
+    }
+})
+
+const { resetPasswordEmail } = require('../emails/account')
+
+// reset password
+router.post('/users/forgotpassword', async (req, res) => {
+    try {
+        console.log(req.body.email)
+        //const user = await User.findOne({ email: req.body.email })
+
+        //const user = await User.findOne({ email: req.body.email })
+
+        //await User.updateOne({ email: req.body.email }, { password: '123456' })
+        const user = await User.findByUserEmail( req.body.email )
+        // const user = await User.findOneAndUpdate({ email: req.body.email }, {password: '123456'}, {
+        //     new: true,
+        //     upsert: true
+        // })
+
+        //await user.save()
+
+        if (!user) {
+           res.status(404).send()
+       }
+ 
+        // console.log(user)
+        // console.log(user.password)
+        //user.password = '111'
+        //await user.save()
+        // console.log(user)
+
+        //resetPasswordEmail(req.body.email, password)
+        // //user.password = '12345'
+
+        // console.log(user.password)
+
+        // user.password= '12345'
+
+        // if (req.body.email === user.email) {
+        //     resetPasswordEmail(user.email, user.password)
+        // }
+        
+        // //console.log(user.email, user.password)
+
+//         await user.save()
+         //res.value instanceof User
+
+        //  user.password = '12345'
+
+        //  console.log(user)
+
+        //  await user.save()
+
+        res.status(200).send(user)
+    } catch (error) {
+        res.status(500).send()
     }
 })
 

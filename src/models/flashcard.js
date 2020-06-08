@@ -20,10 +20,13 @@ const flashcardSchema = new Schema({
   },
   flashcardset: [{
     cardQuestion: {
-      type: String,
+      type: String
     },
     cardAnswer: {
-      type: String,
+      type: String
+    },
+    cardPicture: {
+      type: Buffer
     }
   }],
   tags: [String],
