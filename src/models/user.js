@@ -149,7 +149,7 @@ userSchema.statics.findByUserEmail = async (email) => {
     })
 
  //   resetPasswordEmail(email, username, generatePassword)
-
+ 
     const pw = generatePassword
 
     // const user = await User.findOneAndUpdate({ email }, { password: pw }, {
@@ -162,7 +162,6 @@ userSchema.statics.findByUserEmail = async (email) => {
     const username = user.username
 
     forgotPasswordEmail(email, username, generatePassword)
-
 
     console.log(user.password, '1')
 

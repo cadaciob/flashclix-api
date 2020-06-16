@@ -1,15 +1,20 @@
 const express = require('express') 
 const Flashcard = require('../models/flashcard')
 const auth = require('../middleware/auth') 
+
+const multer = require('multer')
+const sharp = require('sharp')
+
 const router = new express.Router() 
 
 // for testing purpose only
 router.get('/testflashcard', (req, res) => {
   res.send('From a new file ./routers/flashcard.js') 
-}) 
+})
 
 //create flashcard
 router.post('/flashcards', auth, async (req, res) => {
+
   const flashcard = new Flashcard({
     ...req.body,
     createdBy: req.user._id
@@ -78,9 +83,8 @@ router.patch('/flashcards/:id', auth, async (req, res) => {
     'title',
     'flashcardset',
     'tags','cardQuestion',
-    'cardAnswer']
+    'cardAnswer', 'cardPicture']
   const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
-
 
   if (!isValidOperation) {
     return res.status(400).send({
@@ -155,6 +159,73 @@ router.delete('/flashcards/:id', auth, async (req, res) => {
     res.send(flashcard) 
   } catch {
     res.status(500).send() 
+  }
+})
+
+// upload cardPicture
+const upload = multer({
+  limits: {
+      fileSize: 1000000
+  },
+  fileFilter(req, file, cb) {
+      if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+          return cb(new Error('Please upload an image'))
+      }
+
+      cb(undefined, true)
+  }
+})
+
+router.patch('/flashcards/:id/cardpicture', auth, upload.single('cardpicture'), async(req, res) => {
+  const flashcardId = req.params.id
+
+  
+  try {
+  const buffer = await sharp(req.file.buffer).resize({ width: 400, height: 250 }).png().toBuffer()
+
+  const flashcards = await Flashcard.findOne({ _id: flashcardId, createdBy: req.user._id })
+
+  console.log(flashcards)
+    
+  const lastFlashcardIndex = flashcards.flashcardset.length - 1
+  const currentImageCard = flashcards.flashcardset[lastFlashcardIndex]
+
+  //currentImageCard["cardPicture"] = buffer
+
+  currentImageCard.cardPicture = buffer
+
+
+  flashcards.flashcardset.push(currentImageCard)
+  
+  await flashcards.save()
+
+  res.send(flashcards) 
+} catch (error) {
+  res.status(400).send({ error: error.message })
+  }
+
+})
+
+router.get('/flashcards/:id/cardpicture', async (req, res) => {
+
+  const flashcardId = req.params.id
+
+  try {
+      const flashcards = await Flashcard.findById({ _id: flashcardId })
+
+      const lastFlashcardIndex = flashcards.flashcardset.length-1
+      const currentImageCard = flashcards.flashcardset[lastFlashcardIndex]
+
+      if (!flashcards || !flashcards.flashcardset) {
+           throw new Error()
+      }
+
+      console.log(flashcards.flashcardset)
+
+      res.set('Content-Type', 'image/png')
+      res.send(flashcards.flashcardset[lastFlashcardIndex].cardPicture)
+  } catch (e) {
+      res.status(404).send()
   }
 })
 
