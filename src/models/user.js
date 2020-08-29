@@ -48,11 +48,8 @@ const userSchema = new Schema({
     },
     age: {
         type: Number,
-        //required: true,
-        //default : 10,
         validate(value) {
             if (value < 10) {
-                //throw new Error('Age must be a positive number')
                 throw new Error('Sorry, you have to be 10 years old or older to register!')
             }
         }
@@ -66,11 +63,6 @@ const userSchema = new Schema({
     avatar: {
         type: Buffer
     }
-    // createdDatum: {
-    //     type: String,
-    //     required: true,
-    //     default: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString()
-    // }
 }, {
     timestamps: true
 })
@@ -147,26 +139,15 @@ userSchema.statics.findByUserEmail = async (email) => {
         length: 12,
         numbers: true
     })
-
- //   resetPasswordEmail(email, username, generatePassword)
  
     const pw = generatePassword
-
-    // const user = await User.findOneAndUpdate({ email }, { password: pw }, {
-    //     new: true,
-    //     upsert: true 
-    //   })
-
     const user = await User.findOne({ email })
-
     const username = user.username
 
     forgotPasswordEmail(email, username, generatePassword)
 
     console.log(user.password, '1')
-
     user.password = pw
-
     await user.save()
 
     return user
